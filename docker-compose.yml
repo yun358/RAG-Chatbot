@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # Container 1: The Vector Database
+  our-hail-mary-db-service:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: maryHAIL1990
+      POSTGRES_DB: hail_mary_db
+    ports:
+      - "6769:5432"
+    volumes:
+      - hail_mary_storage:/var/lib/postgresql/data
+
+  # Container 2: Your Python Agent
+  agent:
+    build: .
+    depends_on:
+      - our-hail-mary-db-service 
+      - embedding-server 
+      - reranker-server
+    environment:
+      - DATABASE_URL=postgresql://admin:maryHAIL1990@our-hail-mary-db-service:5432/hail_mary_db
+      - EMBEDDING_API_URL=http://embedding-server:8080/v1/embeddings
+      - RERANKER_API_URL=http://reranker-server:8080/v1/rerank
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - .:/app 
+    ports:
+      - "8501:8501"
+    command: streamlit run app.py --server.address=0.0.0.0
+
+  # Container 3: The Local Embedding Server (llama.cpp)
+  embedding-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/models
+    command: >
+      -m /models/bge-m3-FP16.gguf
+      --port 8080
+      --host 0.0.0.0
+      --n-gpu-layers 99
+      --embeddings
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # Container 4: The Local Reranker Server (llama.cpp)
+  reranker-server:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    ports:
+      - "8081:8080"
+    volumes:
+      - .:/models
+    command: >
+      -m /models/bge-reranker-v2-m3-Q4_K_M.gguf
+      --port 8080
+      --host 0.0.0.0
+      --n-gpu-layers 99
+      --reranking
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  hail_mary_storage:
