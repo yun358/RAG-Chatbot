@@ -7,9 +7,18 @@ A completely local, privacy-first Retrieval-Augmented Generation (RAG) pipeline 
 The system follows a strict two-stage retrieval process to guarantee factual accuracy and high informational density before assembling the prompt. 
 
 *   **Hybrid Database Retrieval:** Combines dense vector search (cosine similarity) and sparse lexical search (BM25) entirely within PostgreSQL.
-*   **Reciprocal Rank Fusion:** Merges the candidate lists natively in SQL using the standard 60 constant to reward consensus between retrievers: $$text{Score}(d) = \frac{1}{60 + \text{rank}_{\text{vector}}} + \frac{1}{60 + \text{rank}_{\text{bm25}}}$$
+*   **Reciprocal Rank Fusion:** Merges the candidate lists natively in SQL using the standard 60 constant to reward consensus between retrievers:
+
+$$
+\text{Score}(d) = \frac{1}{60 + \text{rank}_{\text{vector}}} + \frac{1}{60 + \text{rank}_{\text{bm25}}}
+$$
+
 *   **Cross-Encoder Reranking:** Applies full cross-attention to the top 20 database candidates to determine the final context priority. The raw logit is normalized for the UI using the sigmoid function:
-    $$\text{Confidence} = \left( \frac{1}{1 + e^{-\text{logit}}} \right) \times 100$$
+
+$$
+\text{Confidence} = \left( \frac{1}{1 + e^{-\text{logit}}} \right) \times 100
+$$
+
 *   **Dynamic Prompt Budgeting:** Queries the local `llama.cpp` inference server's native `/tokenize` API to count Byte-Pair Encoding (BPE) tokens exactly, iteratively injecting chunks until a strict 6,500-token budget is reached.
 
 ## System Setup (Docker)
@@ -25,7 +34,7 @@ Ensure your `docker-compose.yml` is configured to map the GGUF models correctly 
 
 ## Hardware & VRAM Optimization
 
-This pipeline is engineered to stay strictly within an 8 GB VRAM limit (e.g., NVIDIA RTX 4060) while maintaining a limited context window.
+This pipeline is engineered to stay strictly within an 8 GB VRAM limit (e.g., NVIDIA RTX 4060) while maintaining a massive context window.
 
 *   **LLM Offloading:** The Qwen3 8B model is fully offloaded to the GPU (`-ngl 99`).
 *   **Auxiliary CPU Execution:** The embedding model and cross-encoder operate in system RAM to preserve GPU memory for text generation.
