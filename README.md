@@ -26,7 +26,7 @@ Ensure your `docker-compose.yml` is configured to map the GGUF models correctly 
 
 ## Hardware & VRAM Optimization
 
-This pipeline is engineered to stay strictly within an 8 GB VRAM limit (e.g., NVIDIA RTX 4060) while maintaining a massive context window.
+This pipeline is engineered to stay strictly within an 8 GB VRAM limit (e.g., NVIDIA RTX 4060) while maintaining a limited context window.
 
 *   **LLM Offloading:** The Qwen3 8B model is fully offloaded to the GPU (`-ngl 99`).
 *   **Auxiliary CPU Execution:** The embedding model and cross-encoder operate in system RAM to preserve GPU memory for text generation.
