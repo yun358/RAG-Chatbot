@@ -8,9 +8,7 @@ The system follows a strict two-stage retrieval process to guarantee factual acc
 
 *   **Hybrid Database Retrieval:** Combines dense vector search (cosine similarity) and sparse lexical search (BM25) entirely within PostgreSQL.
 *   **Reciprocal Rank Fusion:** Merges the candidate lists natively in SQL using the standard 60 constant to reward consensus between retrievers:
-$$
-\text{Score}(d) = \frac{1}{60 + \text{rank}_{\text{vector}}} + \frac{1}{60 + \text{rank}_{\text{bm25}}}
-$$
+  $text{Score}(d) = \frac{1}{60 + \text{rank}_{\text{vector}}} + \frac{1}{60 + \text{rank}_{\text{bm25}}}$
 *   **Cross-Encoder Reranking:** Applies full cross-attention to the top 20 database candidates to determine the final context priority. The raw logit is normalized for the UI using the sigmoid function:
     $$\text{Confidence} = \left( \frac{1}{1 + e^{-\text{logit}}} \right) \times 100$$
 *   **Dynamic Prompt Budgeting:** Queries the local `llama.cpp` inference server's native `/tokenize` API to count Byte-Pair Encoding (BPE) tokens exactly, iteratively injecting chunks until a strict 6,500-token budget is reached.
