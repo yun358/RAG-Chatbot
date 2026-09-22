@@ -1,0 +1,7 @@
+psycopg2-binary
+pgvector
+pypdf
+requests
+openai
+streamlit
+tiktoken
